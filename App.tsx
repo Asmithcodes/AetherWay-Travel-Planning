@@ -71,6 +71,14 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!input.origin || !input.destination) return;
 
+    // Enforce Authentication
+    if (!user) {
+      setToastMessage('Please sign in to access premium routing');
+      setTimeout(() => setToastMessage(null), 3000);
+      setIsAuthOpen(true);
+      return;
+    }
+
     setIsLoading(true);
     setExpandedRouteId(null);
     try {
