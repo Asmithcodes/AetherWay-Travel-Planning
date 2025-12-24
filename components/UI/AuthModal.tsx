@@ -25,10 +25,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMessage(null);
 
     try {
+      // Dynamic Site URL that works for localhost AND GitHub Pages sub-paths
+      // e.g., "https://asmithcodes.github.io/AetherWay-Travel-Planning/"
+      const siteUrl = window.location.origin + window.location.pathname;
+
       if (isForgotPassword) {
         // Send password reset email
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${siteUrl}#/reset-password`,
         });
         if (error) throw error;
         setSuccessMessage('Password reset link sent! Check your email.');
@@ -41,7 +45,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         if (error) throw error;
         onClose();
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: siteUrl
+          }
+        });
         if (error) throw error;
         setSuccessMessage('Verification email sent! Please check your inbox.');
         setTimeout(() => {
