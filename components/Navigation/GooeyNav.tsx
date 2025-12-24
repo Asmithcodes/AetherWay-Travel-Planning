@@ -51,7 +51,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
     };
   };
   const makeParticles = (element: HTMLElement) => {
-    const d = particleDistances;
+    const d = particleDistances as [number, number];
     const r = particleR;
     const bubbleTime = animationTime * 2 + timeVariance;
     element.style.setProperty('--time', `${bubbleTime}ms`);
