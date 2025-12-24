@@ -9,13 +9,14 @@ export default {
 
         // Normalize origins by removing trailing slashes for comparison
         const normalizedOrigin = origin.replace(/\/$/, '');
-        const normalizedAllowed = env.ALLOWED_ORIGIN.replace(/\/$/, '');
+        const allowedOrigins = env.ALLOWED_ORIGIN.split(',').map(url => url.trim().replace(/\/$/, ''));
 
         // 1. CORS Preflight
         if (request.method === "OPTIONS") {
+            const isAllowed = allowedOrigins.includes(normalizedOrigin);
             return new Response(null, {
                 headers: {
-                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Origin": isAllowed ? origin : allowedOrigins[0],
                     "Access-Control-Allow-Methods": "POST, OPTIONS",
                     "Access-Control-Allow-Headers": "Content-Type",
                 },
@@ -23,9 +24,9 @@ export default {
         }
 
         // 2. Security: Origin Validation
-        if (normalizedOrigin !== normalizedAllowed) {
-            console.log(`Origin mismatch: ${normalizedOrigin} !== ${normalizedAllowed}`);
-            return new Response(`Forbidden: Invalid Origin. Got: ${origin}, Expected: ${env.ALLOWED_ORIGIN}`, { status: 403 });
+        if (!allowedOrigins.includes(normalizedOrigin)) {
+            console.log(`Origin mismatch: ${normalizedOrigin} is not in [${allowedOrigins.join(', ')}]`);
+            return new Response(`Forbidden: Invalid Origin.`, { status: 403 });
         }
 
         // 3. Proxy Request
