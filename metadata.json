@@ -1,0 +1,7 @@
+{
+  "name": "AetherWays - The Kinetic Route Comparison Engine",
+  "description": "An immersive, AI-powered travel intelligence platform that compares transport routes by time, cost, and atmospheric value using fluid motion and glassmorphism.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

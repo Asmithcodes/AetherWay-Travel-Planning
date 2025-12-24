@@ -1,0 +1,7 @@
+name = "aetherways-api-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-24"
+
+[vars]
+# CRITICAL: Replace with your actual GitHub Pages URL
+ALLOWED_ORIGIN = "https://asmithcodes.github.io"
