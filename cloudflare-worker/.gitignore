@@ -1,13 +1,6 @@
-# Dependencies
 node_modules
-
-# Wrangler
 .wrangler
 dist
-
-# Logs
 *.log
-
-# Environment
 .env
 .dev.vars

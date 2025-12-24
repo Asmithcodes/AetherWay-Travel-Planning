@@ -3,5 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2024-12-24"
 
 [vars]
-# CRITICAL: Replace with your actual GitHub Pages URL
-ALLOWED_ORIGIN = "https://asmithcodes.github.io"
+# For local testing, use: http://localhost:5173
+# For production, use: https://asmithcodes.github.io
+ALLOWED_ORIGIN = "http://localhost:3000"

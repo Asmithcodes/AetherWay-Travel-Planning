@@ -19,14 +19,20 @@ import { useAuthStore } from './store/useAuthStore';
 import { saveSearchHistory } from './services/databaseService';
 import PriceComparisonChart from './components/Charts/PriceComparisonChart';
 import DurationComparisonChart from './components/Charts/DurationComparisonChart';
-import GooeyNav from './components/Navigation/GooeyNav';
+import PillNav from './components/Navigation/PillNav';
+import DiagnosticPage from './components/Pages/DiagnosticPage';
 
 // Check if we're on password reset page BEFORE rendering App
 const AppWrapper: React.FC = () => {
   const isResetPassword = window.location.hash.includes('type=recovery');
+  const isDiagnostic = window.location.hash.includes('diagnostic');
 
   if (isResetPassword) {
     return <ResetPasswordPage />;
+  }
+
+  if (isDiagnostic) {
+    return <DiagnosticPage />;
   }
 
   return <App />;
@@ -144,7 +150,7 @@ const App: React.FC = () => {
             <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">AetherWays</span>
           </div>
           <div className="hidden md:block">
-            <GooeyNav
+            <PillNav
               items={[
                 { label: "Explore", href: "#" },
                 { label: "Favorites", href: "#" },
