@@ -6,10 +6,7 @@ import {
   Sparkles, RefreshCcw, Loader2, Coins, LogOut, User
 } from 'lucide-react';
 import { TripInput, RouteOption, TripScope, CURRENCY_SYMBOLS } from './types';
-// Toggle between mock and real API by changing this import
-// For testing without API: import from './services/geminiService.mock'
-// For production: import from './services/geminiService'
-import { generateRoutes } from './services/geminiService.mock';
+import { generateRoutes } from './services/geminiService';
 import { saveRoute } from './services/databaseService';
 import KineticBackground from './components/Background/KineticBackground';
 import RouteCard from './components/UI/RouteCard';

@@ -1,9 +1,8 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { TripInput, RouteOption, TransportType } from "../types";
 
-// Always use named parameter for apiKey and obtain it directly from process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Get Worker URL from environment variables
+const WORKER_URL = import.meta.env.VITE_WORKER_URL;
 
 export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> => {
   // Convert YYYY-MM-DD to DD-MM-YYYY for regional search compatibility (like Ixigo)
@@ -38,47 +37,70 @@ export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> =
     Return JSON only.
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
+  const requestPayload = {
+    model: "gemini-2.0-flash-exp",
+    payload: {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
+          type: "ARRAY",
           items: {
-            type: Type.OBJECT,
+            type: "OBJECT",
             properties: {
-              id: { type: Type.STRING },
-              type: { type: Type.STRING, enum: Object.values(TransportType) },
-              durationMinutes: { type: Type.NUMBER },
-              totalCost: { type: Type.NUMBER },
-              currency: { type: Type.STRING },
-              bookingUrl: { type: Type.STRING },
+              id: { type: "STRING" },
+              type: { type: "STRING" },
+              durationMinutes: { type: "NUMBER" },
+              totalCost: { type: "NUMBER" },
+              currency: { type: "STRING" },
+              bookingUrl: { type: "STRING" },
               costBreakdown: {
-                type: Type.ARRAY,
+                type: "ARRAY",
                 items: {
-                  type: Type.OBJECT,
+                  type: "OBJECT",
                   properties: {
-                    label: { type: Type.STRING },
-                    amount: { type: Type.NUMBER }
+                    label: { type: "STRING" },
+                    amount: { type: "NUMBER" }
                   },
                   required: ["label", "amount"]
                 }
               },
-              recommendationType: { type: Type.STRING },
-              recommendationReason: { type: Type.STRING }
+              recommendationType: { type: "STRING" },
+              recommendationReason: { type: "STRING" }
             },
             required: ["id", "type", "durationMinutes", "totalCost", "costBreakdown", "currency", "bookingUrl"]
           }
         }
-      }
+      },
+      tools: [{ googleSearch: {} }]
+    }
+  };
+
+  try {
+    if (!WORKER_URL) {
+      throw new Error("VITE_WORKER_URL is not configured. Please add it to your .env file.");
+    }
+
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestPayload),
     });
 
-    const routes: RouteOption[] = JSON.parse(response.text || '[]');
-    
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Worker API Error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    // Parse the response text to get routes
+    const routes: RouteOption[] = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
+
+    // Extract grounding sources
+    const groundingChunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks;
     const sources = groundingChunks?.map((chunk: any) => ({
       title: chunk.web?.title || 'Search Source',
       uri: chunk.web?.uri || ''
