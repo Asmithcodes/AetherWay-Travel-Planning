@@ -4,7 +4,16 @@ import { TripInput, RouteOption, TransportType } from "../types";
 // Get Worker URL from environment variables
 const WORKER_URL = import.meta.env.VITE_WORKER_URL;
 
+// Import mock service as fallback
+import { generateRoutes as generateMockRoutes } from './geminiService.mock';
+
 export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> => {
+  // Fallback to mock data if Worker URL is not configured
+  if (!WORKER_URL || WORKER_URL === 'https://your-worker-url.workers.dev') {
+    console.warn('⚠️ VITE_WORKER_URL not configured. Using mock data. Deploy Cloudflare Worker and update .env file.');
+    return generateMockRoutes(input);
+  }
+
   // Convert YYYY-MM-DD to DD-MM-YYYY for regional search compatibility (like Ixigo)
   const [year, month, day] = input.date.split('-');
   const regionalDate = `${day}-${month}-${year}`;
@@ -77,9 +86,7 @@ export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> =
   };
 
   try {
-    if (!WORKER_URL) {
-      throw new Error("VITE_WORKER_URL is not configured. Please add it to your .env file.");
-    }
+    console.log('🚀 Calling Cloudflare Worker:', WORKER_URL);
 
     const response = await fetch(WORKER_URL, {
       method: "POST",
@@ -91,10 +98,12 @@ export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> =
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ Worker API Error:', response.status, errorText);
       throw new Error(`Worker API Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('✅ Worker Response:', data);
 
     // Parse the response text to get routes
     const routes: RouteOption[] = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
@@ -111,7 +120,9 @@ export const generateRoutes = async (input: TripInput): Promise<RouteOption[]> =
       groundingSources: sources
     }));
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    throw error;
+    console.error("❌ Gemini API Error:", error);
+    console.warn("⚠️ Falling back to mock data due to error");
+    // Fallback to mock data on error
+    return generateMockRoutes(input);
   }
 };
